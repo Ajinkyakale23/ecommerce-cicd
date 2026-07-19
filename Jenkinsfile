@@ -33,8 +33,13 @@ pipeline {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
                     sh """
-                    scp -o StrictHostKeyChecking=no target/*.war ec2-user@$DEV_SERVER:/opt/tomcat/webapps/
-                    ssh -o StrictHostKeyChecking=no ec2-user@$DEV_SERVER "rm -rf /opt/tomcat/webapps/ROOT && cp /opt/tomcat/webapps/*.war /opt/tomcat/webapps/ROOT.war"
+                        scp -o StrictHostKeyChecking=no target/ecommerce-cicd.war ec2-user@$DEV_SERVER:/tmp/
+
+                        ssh -o StrictHostKeyChecking=no ec2-user@$DEV_SERVER '
+                            rm -rf /opt/tomcat/webapps/ROOT
+                            rm -f /opt/tomcat/webapps/ROOT.war
+                            mv /tmp/ecommerce-cicd.war /opt/tomcat/webapps/ROOT.war
+                        '
                     """
                 }
             }
@@ -47,8 +52,13 @@ pipeline {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
                     sh """
-                    scp -o StrictHostKeyChecking=no target/*.war ec2-user@$TEST_SERVER:/opt/tomcat/webapps/
-                    ssh -o StrictHostKeyChecking=no ec2-user@$TEST_SERVER "rm -rf /opt/tomcat/webapps/ROOT && cp /opt/tomcat/webapps/*.war /opt/tomcat/webapps/ROOT.war"
+                        scp -o StrictHostKeyChecking=no target/ecommerce-cicd.war ec2-user@$TEST_SERVER:/tmp/
+
+                        ssh -o StrictHostKeyChecking=no ec2-user@$TEST_SERVER '
+                            rm -rf /opt/tomcat/webapps/ROOT
+                            rm -f /opt/tomcat/webapps/ROOT.war
+                            mv /tmp/ecommerce-cicd.war /opt/tomcat/webapps/ROOT.war
+                        '
                     """
                 }
             }
@@ -61,11 +71,25 @@ pipeline {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
                     sh """
-                    scp -o StrictHostKeyChecking=no target/*.war ec2-user@$PROD_SERVER:/opt/tomcat/webapps/
-                    ssh -o StrictHostKeyChecking=no ec2-user@$PROD_SERVER "rm -rf /opt/tomcat/webapps/ROOT && cp /opt/tomcat/webapps/*.war /opt/tomcat/webapps/ROOT.war"
+                        scp -o StrictHostKeyChecking=no target/ecommerce-cicd.war ec2-user@$PROD_SERVER:/tmp/
+
+                        ssh -o StrictHostKeyChecking=no ec2-user@$PROD_SERVER '
+                            rm -rf /opt/tomcat/webapps/ROOT
+                            rm -f /opt/tomcat/webapps/ROOT.war
+                            mv /tmp/ecommerce-cicd.war /opt/tomcat/webapps/ROOT.war
+                        '
                     """
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment completed successfully.'
+        }
+        failure {
+            echo 'Deployment failed.'
         }
     }
 }
